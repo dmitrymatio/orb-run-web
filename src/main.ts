@@ -55,6 +55,7 @@ async function start(): Promise<void> {
     gameScene.resize( window.innerWidth, window.innerHeight );
   };
   window.addEventListener( 'resize', resize );
+  resize();
   window.addEventListener( 'keydown', ( event ) => {
     if ( event.code === 'KeyR' && state.won ) {
       state = restartGame();

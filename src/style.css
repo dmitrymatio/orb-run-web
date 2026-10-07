@@ -2,6 +2,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; overflow: hidden; }
 canvas { display: block; height: 100vh; width: 100vw; }
+[hidden] { display: none !important; }
 #hud, #win-message { position: fixed; z-index: 1; border: 1px solid rgb(151 220 255 / 35%); background: rgb(7 17 32 / 78%); box-shadow: 0 10px 30px rgb(0 0 0 / 25%); backdrop-filter: blur(10px); }
 #hud { top: 20px; left: 20px; display: grid; gap: 5px; min-width: 160px; padding: 13px 15px; border-radius: 12px; font-variant-numeric: tabular-nums; }
 #title { color: #7edcff; font-size: 0.76rem; font-weight: 800; letter-spacing: 0.18em; }

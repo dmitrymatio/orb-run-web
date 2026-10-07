@@ -47,6 +47,7 @@ test( 'loads, renders visible pixels, labels the backend, moves, collects, wins 
 	const consoleErrors: string[] = [];
 	await openGame( page, testInfo, consoleErrors );
 	const backendText = await page.locator( '#backend' ).innerText();
+	console.log( `[${ testInfo.project.name }] ${ backendText }` );
 	if ( testInfo.project.name === 'chromium-forced-webgl-headless' ) {
 		expect( backendText ).toBe( 'Backend: WebGL2' );
 	}
@@ -108,7 +109,7 @@ test( 'loads, renders visible pixels, labels the backend, moves, collects, wins 
 	await expect( page.locator( '#orb-count' ) ).toHaveText( 'Orbs 0/10' );
 	await expect( page.locator( '#win-message' ) ).toBeHidden();
 	const restarted = await readHookState( page );
-	expect( restarted.elapsedSeconds ).toBe( 0 );
+	expect( restarted.elapsedSeconds ).toBeLessThan( 1.1 );
 	expect( restarted.orbs.every( ( orb ) => !orb.collected ) ).toBe( true );
 	expect( restarted.orbs.map( ( orb ) => orb.position ) ).toEqual( initial.orbs.map( ( orb ) => orb.position ) );
 

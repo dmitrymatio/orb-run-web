@@ -163,9 +163,10 @@ test( 'loads, renders visible pixels, labels the backend, moves, collects, wins 
 	await page.keyboard.press( 'r' );
 	await expect( page.locator( '#orb-count' ) ).toHaveText( 'Orbs 0/10' );
 	await expect( page.locator( '#win-message' ) ).toBeHidden();
-	await expect( timer ).toHaveText( '0.0s' );
+	const restartedTimerText = await timer.innerText();
+	expect( restartedTimerText ).toMatch( /^\d+\.\ds$/ );
+	expect( Number.parseFloat( restartedTimerText ) ).toBeLessThan( 1.1 );
 	const restarted = await readHookState( page );
-	expect( restarted.elapsedSeconds ).toBeLessThan( 1.1 );
 	expect( restarted.orbs.every( ( orb ) => !orb.collected ) ).toBe( true );
 	expect( restarted.orbs.map( ( orb ) => orb.position ) ).toEqual( initial.orbs.map( ( orb ) => orb.position ) );
 

@@ -12,9 +12,17 @@ type OrbRunHook = {
 	teleport: ( x: number, z: number ) => void;
 };
 
+type WebGpuProbe = {
+	requestAdapterCalled: boolean;
+	adapterAcquired: boolean;
+	requestDeviceCalled: boolean;
+	deviceAcquired: boolean;
+};
+
 declare global {
 	interface Window {
 		__orbRun?: OrbRunHook;
+		__orbRunWebGpuProbe?: WebGpuProbe;
 	}
 }
 
@@ -24,6 +32,35 @@ async function openGame( page: Page, testInfo: TestInfo, consoleErrors: string[]
 	} );
 	page.on( 'pageerror', ( error ) => consoleErrors.push( error.message ) );
 	const query = testInfo.project.name === 'chromium-forced-webgl-headless' ? '?backend=webgl' : '';
+	if ( testInfo.project.name === 'edge-headed-real-gpu' ) {
+		await page.addInitScript( () => {
+			const probe: WebGpuProbe = {
+				requestAdapterCalled: false,
+				adapterAcquired: false,
+				requestDeviceCalled: false,
+				deviceAcquired: false,
+			};
+			window.__orbRunWebGpuProbe = probe;
+			const gpu = navigator.gpu;
+			if ( !gpu ) return;
+
+			const requestAdapter = gpu.requestAdapter.bind( gpu );
+			gpu.requestAdapter = async ( options ) => {
+				probe.requestAdapterCalled = true;
+				const adapter = await requestAdapter( options );
+				probe.adapterAcquired = adapter !== null;
+				if ( !adapter ) return null;
+				const requestDevice = adapter.requestDevice.bind( adapter );
+				adapter.requestDevice = async ( descriptor ) => {
+					probe.requestDeviceCalled = true;
+					const device = await requestDevice( descriptor );
+					probe.deviceAcquired = true;
+					return device;
+				};
+				return adapter;
+			};
+		} );
+	}
 	await page.goto( `/${ query }` );
 	await expect( page.locator( '#backend' ) ).toContainText( /Backend: (WebGPU|WebGL2)/ );
 	await expect.poll( () => page.evaluate( () => Boolean( window.__orbRun ) ) ).toBe( true );
@@ -53,6 +90,12 @@ test( 'loads, renders visible pixels, labels the backend, moves, collects, wins 
 	}
 	if ( testInfo.project.name === 'edge-headed-real-gpu' ) {
 		expect( backendText ).toBe( 'Backend: WebGPU' );
+		expect( await page.evaluate( () => window.__orbRunWebGpuProbe ) ).toEqual( {
+			requestAdapterCalled: true,
+			adapterAcquired: true,
+			requestDeviceCalled: true,
+			deviceAcquired: true,
+		} );
 	}
 
 	const canvas = page.locator( 'canvas' );
@@ -86,6 +129,11 @@ test( 'loads, renders visible pixels, labels the backend, moves, collects, wins 
 		const moved = await readHookState( page );
 		return Math.hypot( moved.player.x - initial.player.x, moved.player.z - initial.player.z );
 	} ).toBeGreaterThan( 0.1 );
+	const timer = page.locator( '#timer' );
+	const initialTimerText = await timer.innerText();
+	expect( initialTimerText ).toMatch( /^\d+\.\ds$/ );
+	await expect.poll( () => timer.innerText() ).not.toBe( initialTimerText );
+	await expect.poll( async () => ( await readHookState( page ) ).elapsedSeconds ).toBeGreaterThan( 1.1 );
 
 	const firstOrb = initial.orbs[ 0 ];
 	if ( !firstOrb ) throw new Error( 'Expected the first orb.' );
@@ -102,12 +150,20 @@ test( 'loads, renders visible pixels, labels the backend, moves, collects, wins 
 	await expect( page.locator( '#win-message' ) ).toContainText( 'You win!' );
 	await expect( page.locator( '#win-message' ) ).toContainText( 'Press R to restart' );
 
+	const frozenTimerText = await timer.innerText();
+	expect( frozenTimerText ).toMatch( /^\d+\.\ds$/ );
+	const winSummary = page.locator( '#win-summary' );
+	await expect( winSummary ).toHaveText( /^10\/10 in \d+\.\ds$/ );
+	await expect( winSummary ).toHaveText( `10/10 in ${ frozenTimerText }` );
 	const wonTime = ( await readHookState( page ) ).elapsedSeconds;
-	await page.waitForTimeout( 250 );
+	await page.waitForTimeout( 1_250 );
 	expect( ( await readHookState( page ) ).elapsedSeconds ).toBe( wonTime );
+	await expect( timer ).toHaveText( frozenTimerText );
+	await expect( winSummary ).toHaveText( `10/10 in ${ frozenTimerText }` );
 	await page.keyboard.press( 'r' );
 	await expect( page.locator( '#orb-count' ) ).toHaveText( 'Orbs 0/10' );
 	await expect( page.locator( '#win-message' ) ).toBeHidden();
+	await expect( timer ).toHaveText( '0.0s' );
 	const restarted = await readHookState( page );
 	expect( restarted.elapsedSeconds ).toBeLessThan( 1.1 );
 	expect( restarted.orbs.every( ( orb ) => !orb.collected ) ).toBe( true );

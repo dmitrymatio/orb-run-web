@@ -18,17 +18,18 @@ export default defineConfig( {
 	projects: [
 		{
 			name: 'chromium-default-headless',
-			testIgnore: '**/production.spec.ts',
+			testIgnore: [ '**/production.spec.ts', '**/aspect.spec.ts' ],
 			use: { ...devices[ 'Desktop Chrome' ], headless: true },
 		},
 		{
 			name: 'chromium-forced-webgl-headless',
-			testIgnore: '**/production.spec.ts',
+			testIgnore: [ '**/production.spec.ts', '**/aspect.spec.ts' ],
 			use: { ...devices[ 'Desktop Chrome' ], headless: true },
 		},
 		{
 			name: 'edge-headed-real-gpu',
-			testMatch: '**/game.spec.ts',
+			testMatch: '**/*.spec.ts',
+			testIgnore: '**/production.spec.ts',
 			use: { ...devices[ 'Desktop Edge' ], channel: 'msedge', headless: false },
 		},
 		{

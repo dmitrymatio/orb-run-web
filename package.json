@@ -12,7 +12,9 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test --project=chromium-default-headless --project=chromium-forced-webgl-headless",
+    "test:e2e:edge": "playwright test --project=edge-headed-real-gpu",
+    "test:e2e:production": "playwright test --project=production-preview"
   },
   "dependencies": {
     "three": "0.186.0"

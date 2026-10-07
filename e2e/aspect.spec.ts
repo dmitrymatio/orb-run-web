@@ -3,9 +3,10 @@ import { expect, test } from '@playwright/test';
 test.use( { viewport: { width: 1280, height: 720 } } );
 
 test( 'initial player sphere is round at a non-square viewport', async ( { page }, testInfo ) => {
-	test.skip( testInfo.project.name !== 'edge-headed-real-gpu', 'The captured projection regression is verified in headed Edge.' );
-	await page.goto( '/' );
-	await expect( page.locator( '#backend' ) ).toHaveText( 'Backend: WebGPU' );
+	const forceWebGL = testInfo.project.name === 'chromium-forced-webgl-headless';
+	test.skip( !forceWebGL && testInfo.project.name !== 'edge-headed-real-gpu', 'The projection regression is covered by forced WebGL2 and headed Edge.' );
+	await page.goto( forceWebGL ? '/?backend=webgl' : '/' );
+	await expect( page.locator( '#backend' ) ).toHaveText( forceWebGL ? 'Backend: WebGL2' : 'Backend: WebGPU' );
 	await page.waitForTimeout( 500 );
 	const screenshot = await page.locator( 'canvas' ).screenshot( { path: testInfo.outputPath( 'initial-sphere.png' ) } );
 	const bounds = await page.evaluate( async ( encoded ) => {

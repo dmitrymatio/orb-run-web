@@ -23,7 +23,7 @@ export default defineConfig( {
 		},
 		{
 			name: 'chromium-forced-webgl-headless',
-			testIgnore: [ '**/production.spec.ts', '**/aspect.spec.ts' ],
+			testIgnore: '**/production.spec.ts',
 			use: { ...devices[ 'Desktop Chrome' ], headless: true },
 		},
 		{

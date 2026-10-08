@@ -3,6 +3,11 @@ import { defineConfig, devices } from '@playwright/test';
 const baseURL = process.env.ORB_RUN_BASE_URL ?? 'http://127.0.0.1:5173';
 const previewURL = process.env.ORB_RUN_PREVIEW_URL ?? 'http://127.0.0.1:4173';
 const reuseExistingServer = !process.env.CI;
+const chromiumHeadlessUse = {
+	...devices[ 'Desktop Chrome' ],
+	headless: true,
+	...( process.env.CI ? { viewport: { width: 640, height: 360 } } : {} ),
+};
 
 export default defineConfig( {
 	testDir: './e2e',
@@ -33,12 +38,12 @@ export default defineConfig( {
 		{
 			name: 'chromium-default-headless',
 			testIgnore: [ '**/production.spec.ts', '**/aspect.spec.ts' ],
-			use: { ...devices[ 'Desktop Chrome' ], headless: true },
+			use: chromiumHeadlessUse,
 		},
 		{
 			name: 'chromium-forced-webgl-headless',
 			testIgnore: '**/production.spec.ts',
-			use: { ...devices[ 'Desktop Chrome' ], headless: true },
+			use: chromiumHeadlessUse,
 		},
 		{
 			name: 'edge-headed-real-gpu',

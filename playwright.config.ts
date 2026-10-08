@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const baseURL = process.env.ORB_RUN_BASE_URL ?? 'http://127.0.0.1:5173';
+const previewURL = process.env.ORB_RUN_PREVIEW_URL ?? 'http://127.0.0.1:4173';
+const reuseExistingServer = !process.env.CI;
 
 export default defineConfig( {
 	testDir: './e2e',
@@ -15,6 +17,18 @@ export default defineConfig( {
 		viewport: { width: 1280, height: 800 },
 		trace: 'retain-on-failure',
 	},
+	webServer: [
+		{
+			command: 'npm run dev -- --host 127.0.0.1 --port 5173',
+			url: 'http://127.0.0.1:5173',
+			reuseExistingServer,
+		},
+		{
+			command: 'npm run preview -- --host 127.0.0.1 --port 4173',
+			url: 'http://127.0.0.1:4173',
+			reuseExistingServer,
+		},
+	],
 	projects: [
 		{
 			name: 'chromium-default-headless',
@@ -38,7 +52,7 @@ export default defineConfig( {
 			use: {
 				...devices[ 'Desktop Chrome' ],
 				headless: true,
-				baseURL: process.env.ORB_RUN_PREVIEW_URL ?? 'http://127.0.0.1:4173',
+				baseURL: previewURL,
 			},
 		},
 	],

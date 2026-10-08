@@ -21,6 +21,8 @@ npm run preview
 npm run test:e2e
 ```
 
+[![CI](https://github.com/dmitrymatio/orb-run-web/actions/workflows/ci.yml/badge.svg)](https://github.com/dmitrymatio/orb-run-web/actions/workflows/ci.yml) CI runs typechecking, unit tests, the production build, and headless Chromium browser checks; `npm run test:e2e:edge` remains a local real-GPU Edge check.
+
 ## Where the pieces live
 
 - `src/game/` is the pure, framework-free game state: movement, collection, the timer, win state, and restart.
